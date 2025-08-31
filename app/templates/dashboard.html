@@ -1,0 +1,57 @@
+{% extends "base.html" %} {% block content %}
+<h2>{{ username }}’s Dashboard</h2>
+
+<h3>Today’s Steps (Goal: 15,000)</h3>
+<p>{{ today_steps }} steps</p>
+<div class="progress-container">
+  <div class="progress-bar daily" style="width: {{ daily_percent }}%">
+    {{ daily_percent }}%
+  </div>
+</div>
+
+<h3>This Week’s Steps (Goal: 105,000)</h3>
+<p>{{ week_steps }} steps</p>
+<div class="progress-container">
+  <div class="progress-bar weekly" style="width: {{ weekly_percent }}%">
+    {{ weekly_percent }}%
+  </div>
+</div>
+
+<h3>This Month’s Steps (Goal: 450,000 steps)</h3>
+<p>{{ month_steps }} steps</p>
+<div class="progress-container">
+  <div class="progress-bar monthly" style="width: {{ monthly_percent }}%">
+    {{ monthly_percent }}%
+  </div>
+</div>
+
+<h3>Last 7 Days Steps</h3>
+<canvas id="stepsChart" width="400" height="150"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('stepsChart').getContext('2d');
+  const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+          labels: {{ labels|tojson }},
+          datasets: [{
+              label: 'Steps',
+              data: {{ last_7_days|tojson }},
+              borderColor: '#4CAF50',
+              backgroundColor: 'rgba(76, 175, 80, 0.2)',
+              fill: true,
+              tension: 0.3
+          }]
+      },
+      options: {
+          scales: {
+              y: {
+                  beginAtZero: true,
+                  suggestedMax: 20000
+              }
+          }
+      }
+  });
+</script>
+{% endblock %}

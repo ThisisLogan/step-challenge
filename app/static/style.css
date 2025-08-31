@@ -1,0 +1,98 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f9fafc;
+  margin: 0;
+  padding: 0;
+  color: #333;
+}
+
+header {
+  background: #4caf50;
+  color: white;
+  padding: 10px;
+  text-align: center;
+}
+
+nav a {
+  color: white;
+  margin: 0 10px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+main {
+  padding: 20px;
+  max-width: 600px;
+  margin: auto;
+  background: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+h1,
+h2 {
+  color: #333;
+}
+
+form input,
+form button {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 8px;
+  font-size: 14px;
+}
+
+form button {
+  background: #4caf50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+form button:hover {
+  background: #45a049;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+th,
+td {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+.progress-bar.weekly {
+  background: #ff5722; /* Orange for weekly */
+}
+
+tr:nth-child(even) {
+  background: #f2f2f2;
+}
+
+.progress-container {
+  background: #eee;
+  border-radius: 20px;
+  overflow: hidden;
+  height: 20px;
+  width: 100%;
+}
+.progress-bar {
+  height: 100%;
+  text-align: center;
+  line-height: 20px;
+  color: white;
+  font-size: 12px;
+}
+.progress-bar.daily {
+  background: #2196f3;
+}
+.progress-bar.monthly {
+  background: #ff9800;
+}

@@ -1,0 +1,69 @@
+
+# ------------------------
+# Python / Flask
+# ------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+env/
+venv/
+ENV/
+.venv/
+
+# Flask instance folder (config & local DB)
+instance/
+
+# SQLite database files
+*.db
+*.sqlite3
+
+# Logs
+*.log
+*.out
+
+# Python packaging
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ------------------------
+# Docker
+# ------------------------
+# Ignore Docker volumes
+docker-compose.override.yml
+*.dockerignore
+*.swp
+*.tmp
+
+# Ignore container / volume files
+**/data/
+**/volume/
+
+# ------------------------
+# Environment variables / secrets
+# ------------------------
+.env
+.env.*
+secrets/
+
+# ------------------------
+# Editor / OS files
+# ------------------------
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# ------------------------
+# Optional: coverage / testing
+# ------------------------
+.coverage
+htmlcov/
+.tox/
+.nox/

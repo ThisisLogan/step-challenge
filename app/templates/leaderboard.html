@@ -1,0 +1,55 @@
+{% extends "base.html" %} {% block content %}
+<h2>Leaderboard - {{ month }} {{ year }}</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Today</th>
+      <th>Daily %</th>
+      <th>Week</th>
+      <th>Weekly %</th>
+      <th>Month</th>
+      <th>Monthly %</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user, today_steps, daily_percent, week_steps, weekly_percent,
+    month_steps, monthly_percent in leaderboard %}
+    <tr>
+      <td>{{ user }}</td>
+
+      <td>{{ today_steps }}</td>
+      <td>
+        <div class="progress-container">
+          <div class="progress-bar daily" style="width: {{ daily_percent }}%">
+            {{ daily_percent }}%
+          </div>
+        </div>
+      </td>
+
+      <td>{{ week_steps }}</td>
+      <td>
+        <div class="progress-container">
+          <div class="progress-bar weekly" style="width: {{ weekly_percent }}%">
+            {{ weekly_percent }}%
+          </div>
+        </div>
+      </td>
+
+      <td>{{ month_steps }}</td>
+      <td>
+        <div class="progress-container">
+          <div
+            class="progress-bar monthly"
+            style="width: {{ monthly_percent }}%"
+          >
+            {{ monthly_percent }}%
+          </div>
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
