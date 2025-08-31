@@ -3,7 +3,7 @@ services:
   step-challenge:
     build: .
     ports:
-      - "5050:5000"
+      - "5051:5000"
     volumes:
       - ./data:/app/instance   # persist SQLite DB
     restart: always
