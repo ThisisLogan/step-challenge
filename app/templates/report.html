@@ -1,10 +1,13 @@
 {% extends "base.html" %} {% block content %}
 <h2>Report Steps ({{ username }})</h2>
 <form method="POST">
-  <label for="date">Date (Sep 1–30):</label>
-  <input type="date" id="date" name="date" min="2025-09-01" max="{{ today }}" />
-  <label for="steps">Steps:</label>
-  <input type="number" id="steps" name="steps" required />
-  <button type="submit">Submit</button>
+    <label for="date">Date (Sep 1–30):</label>
+    <input type="date" id="date" name="date"
+           min="2025-09-01"
+           max="{{ today }}"
+           value="{{ today }}">
+    <label for="steps">Steps:</label>
+    <input type="number" id="steps" name="steps" required>
+    <button type="submit">Submit</button>
 </form>
 {% endblock %}

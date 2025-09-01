@@ -180,7 +180,6 @@ def report():
         except ValueError:
             return "Invalid number of steps", 400
 
-    # GET request
     return render_template("report.html", today=today_sydney)
 
 
