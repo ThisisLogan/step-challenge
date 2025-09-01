@@ -1,5 +1,5 @@
 {% extends "base.html" %} {% block content %}
-<h2>Report Steps ({{ username }})</h2>
+<h2>Report Steps ({{ session['username'] }})</h2>
 <form method="POST">
     <label for="date">Date (Sep 1–30):</label>
     <input type="date" id="date" name="date"
