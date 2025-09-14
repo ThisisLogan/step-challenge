@@ -1,6 +1,30 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+{% block content %}
 <h2>{{ username }}’s Dashboard</h2>
 
+<!-- Week Navigation Controls -->
+<div class="week-navigation">
+  <a class="btn btn-outline-primary 
+     {% if week_start <= september_start %}disabled{% endif %}"
+     href="{{ url_for('dashboard', week_start=(week_start - timedelta(days=7)).strftime('%Y-%m-%d')) }}">
+     &larr; Previous Week
+  </a>
+
+  <span class="current-week">
+    {{ week_start.strftime('%B %d, %Y') }} - 
+    {{ (week_start + timedelta(days=6)).strftime('%B %d, %Y') }}
+  </span>
+
+  <a class="btn btn-outline-primary 
+     {% if week_start + timedelta(days=7) > september_end or week_start + timedelta(days=7) > today %}disabled{% endif %}"
+     href="{{ url_for('dashboard', week_start=(week_start + timedelta(days=7)).strftime('%Y-%m-%d')) }}">
+     Next Week &rarr;
+  </a>
+</div>
+
+<hr class="mb-4">
+
+<!-- Daily Progress -->
 <h3>Today’s Steps (Goal: 15,000)</h3>
 <p>{{ today_steps }} steps</p>
 <div class="progress-container">
@@ -9,6 +33,7 @@
   </div>
 </div>
 
+<!-- Weekly Progress -->
 <h3>This Week’s Steps (Goal: 105,000)</h3>
 <p>{{ week_steps }} steps</p>
 <div class="progress-container">
@@ -17,6 +42,7 @@
   </div>
 </div>
 
+<!-- Monthly Progress -->
 <h3>This Month’s Steps (Goal: 450,000 steps)</h3>
 <p>{{ month_steps }} steps</p>
 <div class="progress-container">
@@ -25,7 +51,7 @@
   </div>
 </div>
 
-<h3>Last 7 Days Steps</h3>
+<h3>Steps for Selected Week ({{ week_start.strftime('%b %d') }} - {{ week_end.strftime('%b %d') }})</h3>
 <canvas id="stepsChart" width="400" height="150"></canvas>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -54,4 +80,49 @@
       }
   });
 </script>
+
+<style>
+  /* Styling for progress bars */
+  .progress-container {
+    width: 100%;
+    background-color: #f3f3f3;
+    border-radius: 8px;
+    margin: 10px 0 20px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 25px;
+    text-align: center;
+    color: white;
+    line-height: 25px;
+    font-weight: bold;
+  }
+
+  .progress-bar.daily {
+    background-color: #4caf50;
+  }
+
+  .progress-bar.weekly {
+    background-color: #2196f3;
+  }
+
+  .progress-bar.monthly {
+    background-color: #ff9800;
+  }
+
+  /* Week navigation layout */
+  .week-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .week-navigation .current-week {
+    font-weight: bold;
+    font-size: 1.1em;
+  }
+</style>
 {% endblock %}
+

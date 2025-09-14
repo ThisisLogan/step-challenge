@@ -4,12 +4,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import calendar
 from datetime import datetime, date, timedelta
 from sqlalchemy import func
-from zoneinfo import ZoneInfo  # Python 3.9+
+from zoneinfo import ZoneInfo
 
 SYDNEY_TZ = ZoneInfo("Australia/Sydney")
 
 app = Flask(__name__)
-app.secret_key = "supersecret"  # ⚠️ change in production
+app.secret_key = "supersecret"  # change this to a .env or something
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///steps.db"
 db = SQLAlchemy(app)
 
@@ -54,67 +54,94 @@ def dashboard():
         return redirect(url_for("login"))
 
     user_id = session["user_id"]
-    today = datetime.now(SYDNEY_TZ).date()  # Sydney date
-    daily_goal = 15000
-    days_in_month = calendar.monthrange(today.year, today.month)[1]
-    weekly_goal = daily_goal * 7
-    monthly_goal = daily_goal * days_in_month
+    user = User.query.get(user_id)
 
-    # Daily steps
+    # --- Date setup ---
+    today = datetime.now().date()
+    september_start = datetime(today.year, 9, 1).date()
+    september_end = datetime(today.year, 9, 30).date()
+
+    # Week navigation logic
+    week_start_str = request.args.get("week_start")
+    if week_start_str:
+        week_start = datetime.strptime(week_start_str, "%Y-%m-%d").date()
+    else:
+        # Default to current week's Monday, but not before Sept 1
+        week_start = max(today - timedelta(days=today.weekday()), september_start)
+
+    # Clamp week_start inside September
+    if week_start < september_start:
+        week_start = september_start
+    elif week_start > september_end:
+        week_start = september_end
+
+    week_end = min(week_start + timedelta(days=6), september_end)
+
+    # --- Query data for dashboard ---
+    # 1. Today's steps
     today_steps = (
         db.session.query(func.sum(Step.steps))
-        .filter(Step.user_id == user_id, Step.date == today.isoformat())
+        .filter(Step.user_id == user_id, Step.date == today)
         .scalar()
         or 0
     )
-    daily_percent = min(int(today_steps / daily_goal * 100), 100)
 
-    # Weekly steps
-    start_week = today - timedelta(days=6)
+    # 2. Week's steps
     week_steps = (
         db.session.query(func.sum(Step.steps))
-        .filter(Step.user_id == user_id)
-        .filter(Step.date >= start_week.isoformat(), Step.date <= today.isoformat())
+        .filter(Step.user_id == user_id, Step.date.between(week_start, week_end))
         .scalar()
         or 0
     )
-    weekly_percent = min(int(week_steps / weekly_goal * 100), 100)
 
-    # Monthly steps
-    month_prefix = today.strftime("%Y-%m")
+    # 3. Month's steps
     month_steps = (
         db.session.query(func.sum(Step.steps))
-        .filter(Step.user_id == user_id, Step.date.like(f"{month_prefix}%"))
+        .filter(
+            Step.user_id == user_id, Step.date.between(september_start, september_end)
+        )
         .scalar()
         or 0
     )
-    monthly_percent = min(int(month_steps / monthly_goal * 100), 100)
 
-    # Last 7 days for chart
-    last_7_days = []
+    # --- Progress percentages ---
+    daily_percent = min(int((today_steps / 15000) * 100), 100)
+    weekly_percent = min(int((week_steps / 105000) * 100), 100)
+    monthly_percent = min(int((month_steps / 450000) * 100), 100)
+
+    # --- Weekly data for chart ---
     labels = []
-    for i in range(6, -1, -1):
-        day = today - timedelta(days=i)
-        step_count = (
+    chart_data = []
+    current_day = week_start
+
+    while current_day <= week_end:
+        steps_for_day = (
             db.session.query(func.sum(Step.steps))
-            .filter(Step.user_id == user_id, Step.date == day.isoformat())
+            .filter(Step.user_id == user_id, Step.date == current_day)
             .scalar()
             or 0
         )
-        last_7_days.append(step_count)
-        labels.append(day.strftime("%d-%b"))
+        labels.append(current_day.strftime("%a %d"))
+        chart_data.append(steps_for_day)
+        current_day += timedelta(days=1)
 
     return render_template(
         "dashboard.html",
-        username=session["username"],
+        username=user.username,
+        today=today,
+        week_start=week_start,
+        week_end=week_end,
+        september_start=september_start,
+        september_end=september_end,
+        timedelta=timedelta,
         today_steps=today_steps,
         daily_percent=daily_percent,
         week_steps=week_steps,
         weekly_percent=weekly_percent,
         month_steps=month_steps,
         monthly_percent=monthly_percent,
-        last_7_days=last_7_days,
         labels=labels,
+        last_7_days=chart_data,
     )
 
 
