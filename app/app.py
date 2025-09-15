@@ -1,15 +1,24 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, flash, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import calendar
 from datetime import datetime, date, timedelta
 from sqlalchemy import func
 from zoneinfo import ZoneInfo
+import os
+from dotenv import load_dotenv
 
 SYDNEY_TZ = ZoneInfo("Australia/Sydney")
 
+# Load the .env file
+load_dotenv()
+
+# Get secret values
+FLASK_SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "fallbacksecret")
+SECRET_REGISTRATION_CODE = os.getenv("REGISTRATION_CODE", "DEFAULTCODE")
+
 app = Flask(__name__)
-app.secret_key = "supersecret"  # change this to a .env or something
+app.secret_key = FLASK_SECRET_KEY
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///steps.db"
 db = SQLAlchemy(app)
 
@@ -35,17 +44,37 @@ def index():
     return redirect(url_for("leaderboard"))
 
 
-@app.route("/signup", methods=["GET", "POST"])
-def signup():
+@app.route("/register", methods=["GET", "POST"])
+def register():
     if request.method == "POST":
         username = request.form["username"]
-        password = generate_password_hash(request.form["password"])
-        if User.query.filter_by(username=username).first():
-            return "Username already exists!"
-        db.session.add(User(username=username, password_hash=password))
+        password = request.form["password"]
+        reg_code = request.form.get("registration_code", "").strip()
+
+        # Check if username already exists
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            flash("Username already taken. Please choose another one.", "danger")
+            return redirect(url_for("register"))
+
+        # Validate the registration code
+        if reg_code != SECRET_REGISTRATION_CODE:
+            flash(
+                "Invalid registration code. Please contact the challenge organizer.",
+                "danger",
+            )
+            return redirect(url_for("register"))
+
+        # Create new user
+        hashed_password = generate_password_hash(password)
+        new_user = User(username=username, password_hash=hashed_password)
+        db.session.add(new_user)
         db.session.commit()
+
+        flash("Registration successful! You can now log in.", "success")
         return redirect(url_for("login"))
-    return render_template("signup.html")
+
+    return render_template("register.html")
 
 
 @app.route("/dashboard")

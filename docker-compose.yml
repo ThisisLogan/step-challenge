@@ -1,8 +1,11 @@
 services:
   step-challenge:
+    container_name: step-challenge
     build: .
     ports:
       - "5051:5000"
     volumes:
       - ./data:/app/instance   # persist SQLite DB
+    env_file:
+      - .env
     restart: always
