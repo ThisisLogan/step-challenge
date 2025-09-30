@@ -29,6 +29,7 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True)
     password_hash = db.Column(db.String(128))
     steps = db.relationship("Step", backref="user", lazy=True)
+    is_locked = db.Column(db.Integer, default=0)
 
 
 class Step(db.Model):
@@ -177,14 +178,25 @@ def dashboard():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"]
+        username = request.form["username"].strip()
         password = request.form["password"]
+
         user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password_hash, password):
-            session["user_id"] = user.id
-            session["username"] = user.username
-            return redirect(url_for("report"))
-        return "Invalid login!"
+
+        if not user or not check_password_hash(user.password_hash, password):
+            return render_template("login.html", error="Invalid username or password")
+
+        if user.is_locked:  # check the new column
+            return render_template(
+                "login.html",
+                error="This account has been locked. Please contact the administrator.",
+            )
+
+        # login success
+        session["user_id"] = user.id
+        session["username"] = user.username
+        return redirect(url_for("report"))
+
     return render_template("login.html")
 
 
@@ -241,29 +253,37 @@ def report():
 
 @app.route("/leaderboard")
 def leaderboard():
-    today = datetime.now(SYDNEY_TZ).date()  # Sydney date
+    # Force September 2025 challenge period
+    start_date = datetime(2025, 9, 1).date()
+    end_date = datetime(2025, 9, 30).date()
+
     daily_goal = 15000
-    days_in_month = calendar.monthrange(today.year, today.month)[1]
+    days_in_month = (end_date - start_date).days + 1
     weekly_goal = daily_goal * 7
     monthly_goal = daily_goal * days_in_month
 
-    month_prefix = today.strftime("%Y-%m")
-    start_week = today - timedelta(days=6)
+    today = datetime.now(SYDNEY_TZ).date()
+    # Clamp today to end_date if we're past September
+    if today > end_date:
+        today = end_date
+
+    start_week = max(start_date, today - timedelta(days=6))
 
     users = User.query.all()
     leaderboard_data = []
 
     for u in users:
-        # Daily
+        # Daily (but only if within Sept range)
         today_steps = (
             db.session.query(func.sum(Step.steps))
-            .filter(Step.user_id == u.id, Step.date == today.isoformat())
+            .filter(Step.user_id == u.id)
+            .filter(Step.date == today.isoformat())
             .scalar()
             or 0
         )
         daily_percent = min(int(today_steps / daily_goal * 100), 100)
 
-        # Weekly
+        # Weekly (bounded inside September)
         week_steps = (
             db.session.query(func.sum(Step.steps))
             .filter(Step.user_id == u.id)
@@ -273,10 +293,13 @@ def leaderboard():
         )
         weekly_percent = min(int(week_steps / weekly_goal * 100), 100)
 
-        # Monthly
+        # Monthly (strictly 1–30 Sept)
         month_steps = (
             db.session.query(func.sum(Step.steps))
-            .filter(Step.user_id == u.id, Step.date.like(f"{month_prefix}%"))
+            .filter(Step.user_id == u.id)
+            .filter(
+                Step.date >= start_date.isoformat(), Step.date <= end_date.isoformat()
+            )
             .scalar()
             or 0
         )
@@ -302,8 +325,8 @@ def leaderboard():
     return render_template(
         "leaderboard.html",
         leaderboard=leaderboard_data,
-        month=today.strftime("%B"),
-        year=today.year,
+        month="September",
+        year=2025,
         today=today,
     )
 
